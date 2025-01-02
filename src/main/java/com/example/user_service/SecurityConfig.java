@@ -38,7 +38,11 @@ public class SecurityConfig {
             .authorizeHttpRequests((authorize) -> authorize
                     .anyRequest().authenticated())
             .httpBasic(Customizer.withDefaults())
-            .formLogin(Customizer.withDefaults());
+            .formLogin(form -> form
+                .loginPage("/login")
+                .defaultSuccessUrl("/")
+                .failureUrl("/login?error=true")
+                .permitAll());
 
         return http.build();
     }
