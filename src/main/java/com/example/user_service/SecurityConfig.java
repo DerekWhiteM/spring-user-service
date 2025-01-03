@@ -22,13 +22,16 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    private PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 
     @Bean
     public AuthenticationProvider authenticationProvider(DataSource dataSource) {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
         provider.setUserDetailsService(users(dataSource));
-        provider.setPasswordEncoder(passwordEncoder);
+        provider.setPasswordEncoder(passwordEncoder());
         return provider;
     }
 
@@ -36,13 +39,17 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests((authorize) -> authorize
+                    .requestMatchers("/login", "/login-page", "/register", "/css/**", "/js/**").permitAll()
                     .anyRequest().authenticated())
             .httpBasic(Customizer.withDefaults())
             .formLogin(form -> form
                 .loginPage("/login")
                 .defaultSuccessUrl("/")
                 .failureUrl("/login?error=true")
-                .permitAll());
+                .permitAll())
+            .csrf(csrf -> csrf
+                .disable()  // Only for testing. In production, you should properly handle CSRF
+            );
 
         return http.build();
     }
@@ -55,7 +62,7 @@ public class SecurityConfig {
         } catch (UsernameNotFoundException e) {
             UserDetails admin = User.builder()
                 .username("admin")
-                .password(passwordEncoder.encode("admin"))
+                .password(passwordEncoder().encode("admin"))
                 .roles("USER", "ADMIN")
                 .build();
             users.createUser(admin);
