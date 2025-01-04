@@ -27,6 +27,7 @@ public class RegistrationController {
         try {
             userService.registerNewUser(user);
             redirectAttributes.addFlashAttribute("success", "Registration successful! Please login.");
+            System.out.printf("EVENT: %s has registered\n", user.getUsername());
             return "redirect:/login";
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
